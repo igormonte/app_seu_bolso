@@ -1,4 +1,4 @@
-package com.example.app_seu_bolso
+package com.odisseia_virtual.app_seu_bolso
 
 import io.flutter.embedding.android.FlutterActivity
 

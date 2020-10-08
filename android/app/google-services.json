@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "7456210764",
+    "firebase_url": "https://seu-bolso-ecac4.firebaseio.com",
+    "project_id": "seu-bolso-ecac4",
+    "storage_bucket": "seu-bolso-ecac4.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:7456210764:android:9f28daeaab8b63173619e9",
+        "android_client_info": {
+          "package_name": "com.odisseia_virtual.app_seu_bolso"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "7456210764-1cgu96b117k0mblu2rdbrbvj7sq11087.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHHPP_-kS2DcCSmS41fvZjrDkkPM_FXzM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "7456210764-1cgu96b117k0mblu2rdbrbvj7sq11087.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
