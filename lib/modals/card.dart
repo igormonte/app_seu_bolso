@@ -1,8 +1,5 @@
 import 'package:app_seu_bolso/common/appColors.dart';
-import 'package:app_seu_bolso/form.dart';
-import 'package:app_seu_bolso/home.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -52,16 +49,21 @@ class _CardModalState extends State<CardModal> {
             body: ListView.builder(
               itemBuilder: (context, index) {
                 return Card(
-                  child: ListTile(
-                    onTap: () {
-                      Navigator.of(context).pushNamed(/*metas[index]*/ 1.toString());
-                    },
-                    leading: CircleAvatar(
-                      backgroundColor: AppColors.backGroud,
-                      child: Text("${index + 1}")
-                    ),
-                    title: Text(/*metas[index].data['titulo'].toString()*/ 'AAA'),
-                  ),
+                  child: Column(
+                    children: <Widget> [
+                      ListTile(
+                        onTap: () {
+                          Navigator.of(context).pushNamed(metas[index]);
+                        },
+                        leading: CircleAvatar(
+                          backgroundColor: AppColors.primaryColor,
+                          child: Text("${index + 1}")
+                        ),
+                        title: Text(metas[index].data['titulo'].toString()),
+                      ),
+                      Text("Restante ${metas[index].data['totalRestante'].toString()}")
+                    ],
+                  )
                 );
               },
               itemCount: /*metas.documents.length*/ 1,

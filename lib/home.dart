@@ -1,8 +1,11 @@
 import 'package:app_seu_bolso/common/appColors.dart';
+import 'package:app_seu_bolso/common/appSize.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
 
 class Home extends StatefulWidget {
   static const routeName = 'Home';
@@ -29,16 +32,39 @@ class _HomeState extends State<Home> {
                 return ListView.builder(
                   itemBuilder: (context, index) {
                     return Card(
-                      child: ListTile(
-                        onTap: () {
-                          Navigator.of(context).pushNamed('Form', arguments: snapshot.data.docs[index]);
-                        },
-                        leading: CircleAvatar(
-                          backgroundColor: AppColors.backGroud,
-                          child: Text("${index + 1}")
-                        ),
-                        title: Text(snapshot.data.docs[index].data()['titulo'].toString()),
-                      ),
+                      margin: EdgeInsets.fromLTRB(AppSize.edges['md'], AppSize.edges['md'], AppSize.edges['md'], AppSize.edges['sm']),
+                      color: getColor(snapshot.data.docs[index].data()['totalRestante'], snapshot.data.docs[index].data()['totalInvestir']), 
+                      child: Center(
+                        child:Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row (
+                            children: <Widget>[
+                              Padding(
+                                padding: EdgeInsets.fromLTRB(0, 0, 16, 0),
+                                child: Icon(Icons.account_box,size: 40, color: Colors.white)
+                              ),
+                              Column (
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>
+                                [ new GestureDetector(
+                                      onTap: () {
+                                        Navigator.of(context).pushNamed('Form', arguments: snapshot.data.docs[index]);
+                                      },
+                                      child: new Text(snapshot.data.docs[index].data()['titulo'].toString(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.white),),
+                                    ),
+                                  Row (
+                                    children: <Widget>[
+                                      Text(getCurrencyFormat(snapshot.data.docs[index].data()['totalRestante'].toDouble())+' restantes...', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white)),
+                                    ]
+                                  ),
+                                  Text('Vencimento: '+getVencimento(snapshot.data.docs[index].data()['vencimento']), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.white))
+                                  //Text(.toString())
+                                ]
+                              )
+                            ]
+                          )
+                        )
+                      )
                     );
                   },
                   itemCount: snapshot.data.docs.length,
@@ -51,8 +77,42 @@ class _HomeState extends State<Home> {
             }
             return CircularProgressIndicator();
           },
-        )
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.of(context).pushNamed('Form');
+          },
+          child: Icon(Icons.navigation),
+          backgroundColor: AppColors.primaryColor
+        ),
       );
+  }
+
+  Color getColor (valor, baseValor) {
+    if (valor/baseValor > 0.8){
+      return AppColors.vExpensive;
+
+    } else if (valor/baseValor > 0.5) {
+      return AppColors.expensive;
+
+    } else if (valor/baseValor > 0.3) {
+      return AppColors.cheap;
+
+    } else {
+      return AppColors.cheapest;
+
+    }
+
+  }
+
+  String getVencimento(Timestamp stringTime){
+    DateTime date = stringTime.toDate();
+    return DateFormat('dd/MM/yyyy').format(date).toString();
+  }
+
+  String getCurrencyFormat(double valor){
+     NumberFormat formater = new NumberFormat("R\$ ###.0#", "pt_BR");
+     return formater.format(valor).toString();
   }
 
   Future<QuerySnapshot> getData() async {

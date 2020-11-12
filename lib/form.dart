@@ -1,7 +1,9 @@
+import 'package:app_seu_bolso/common/appSize.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class FormScreen extends StatefulWidget {
   static const routeName = 'Form';
@@ -13,24 +15,47 @@ class FormScreen extends StatefulWidget {
 
 class FormScreenState extends State<FormScreen> {
 
+  String _documentId;
   String _titleName;
   String _investimentType;
-  List<String> _investimentTypes = ['Automóvel', 'Imóvel', 'Viagem', 'Curso', 'Outros' ];
+  List<String> _investimentTypes = [];
   String _payimentType;
-   List<String> _payimentTypes = ['À vista', 'À prazo'];
+  List<String> _payimentTypes = [];
   String _investimentValue;
   String _paymentDate;
+  bool _update = false;
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   addDataToBd(){
-    var objeto = {
+    Firebase.initializeApp();
+    String dbDate = _paymentDate.split('/')[2]+'-'+_paymentDate.split('/')[1]+'-'+_paymentDate.split('/')[0];
+    DateTime parsedDate = DateTime.parse(dbDate);
+    Timestamp paymentDateTimestamp = Timestamp.fromDate(parsedDate);
+    Map<String,dynamic> objeto = {
       'titulo': _titleName,
-      'tipoInvestimento': _investimentType,
-      'tipoPagamento': _payimentType,
-      'valorTotalInvestimento': _investimentValue,
-      'dataPagamento': _paymentDate
+      'tipoInvestimento': FirebaseFirestore.instance.collection('tipoPagamento').doc(_investimentType),
+      'tipoPagamento': FirebaseFirestore.instance.collection('tipoPagamento').doc(_payimentType),
+      'totalInvestir': double.parse(_investimentValue),
+      'totalRestante': double.parse(_investimentValue),
+      'vencimento': paymentDateTimestamp
     };
+    if(!_update){
+      FirebaseFirestore.instance.collection('metas').add(objeto).catchError((onError){
+        print(onError);
+      });
+    } else {
+      FirebaseFirestore.instance.collection('metas').doc(_documentId).update(objeto).catchError((onError){
+        print(onError);
+      });
+    }
+    Navigator.of(context).pushNamed('Home');
+  }
+
+  deleteMeta(){
+    Firebase.initializeApp();
+    FirebaseFirestore.instance.collection('metas').doc(_documentId).delete();
+    Navigator.of(context).pushNamed('Home');
   }
   
   Widget _buildTituloField() {
@@ -38,6 +63,7 @@ class FormScreenState extends State<FormScreen> {
       decoration: InputDecoration(
         labelText: 'Título'
       ),
+      initialValue: _titleName,
       validator: (String value){
         if(value.isEmpty){
           return 'Título é obrigatório.';
@@ -118,6 +144,7 @@ class FormScreenState extends State<FormScreen> {
       decoration: InputDecoration(
         labelText: 'Valor Total do Investimento'
       ),
+      initialValue: _investimentValue,
       validator: (String value){
         if(value.isEmpty){
           return 'Valor Total do Investimento é obrigatório';
@@ -136,6 +163,7 @@ class FormScreenState extends State<FormScreen> {
       decoration: InputDecoration(
         labelText: 'Data de Pagamento'
       ),
+      initialValue: _paymentDate,
       validator: (String value){
         if(value.isEmpty){
           return 'Data de Pagamento é obrigatória.';
@@ -155,7 +183,7 @@ class FormScreenState extends State<FormScreen> {
         'Cancelar',
       style: TextStyle(
         color: Colors.blue,
-        fontSize: 16
+        fontSize: AppSize.fonts['md']
         ),
       ),
       onPressed: () {
@@ -170,7 +198,7 @@ class FormScreenState extends State<FormScreen> {
         'Salvar',
       style: TextStyle(
         color: Colors.blue,
-        fontSize: 16
+        fontSize: AppSize.fonts['md']
         ),
       ),
       onPressed: () {
@@ -184,12 +212,44 @@ class FormScreenState extends State<FormScreen> {
     );
   }
 
+  Widget _buildDeleteField(){
+    return Visibility(
+      child: RaisedButton(
+        child: Text(
+          'Deletar',
+        style: TextStyle(
+          color: Colors.blue,
+          fontSize: AppSize.fonts['md']
+          ),
+        ),
+        onPressed: () {
+          deleteMeta();
+
+        },
+      ),
+      visible: _update? true : false,
+    );
+  } 
+
   @override
   void initState() {
     super.initState();
-    
-    getTipoPagamento().then((value) => value.docs.map((e) => print('passou aqui')));
-    getTipoInvestimento().then((value) => value.docs.map((e) => print(e.reference.id)));
+
+    getTipoInvestimento().then((value) => {
+      setState(() {
+        value.docs.asMap().forEach((key, value) {
+          this._investimentTypes.add(value.id);
+        });
+      })
+    });
+
+    getTipoPagamento().then((value) => {
+      setState(() {
+        value.docs.asMap().forEach((key, value) {
+          this._payimentTypes.add(value.id);
+        });
+      })
+    });
 
   }
 
@@ -198,41 +258,66 @@ class FormScreenState extends State<FormScreen> {
   Widget build(BuildContext context) {
     
     final QueryDocumentSnapshot metas = ModalRoute.of(context).settings.arguments;
-    print(metas.data()['titulo']);
+    if(metas != null){
+      _update = true;
+      _documentId = metas.id; 
+      _titleName = metas.data()['titulo'];
+      _investimentType = metas.data()['tipoInvestimento'].id;
+      _payimentType = metas.data()['tipoPagamento'].id;
+      _investimentValue= metas.data()['totalInvestir'].toString();
+      _paymentDate = getVencimento(metas.data()['vencimento']);
+    }
+
     return Scaffold(
       appBar: AppBar(title: Text("Form")),
-      body: Container(
-        margin: EdgeInsets.all(24),
-        child: Align(
-          alignment: Alignment.topCenter,
-          child:Form(
-            key: _formKey,
-            child: Column(
-            children: <Widget>[
-              _buildTituloField(),
-              _buildInvestimentoField(),
-              _buildTipoPagamentoField(),
-              _buildTotalInvestimentoField(),
-              _buildDataPagamentoField(),
-              _buildCancelarField(),
-              _buildSalvarField(),
-            ],
-            )
-          ),
-        )
+      body: SingleChildScrollView(
+        child: Container(
+          margin: EdgeInsets.all(AppSize.edges['sm']),
+          child: Align(
+            alignment: Alignment.topCenter,
+            child:Form(
+              key: _formKey,
+              child: Column(
+              children: <Widget>[
+                _buildTituloField(),
+                _buildInvestimentoField(),
+                _buildTipoPagamentoField(),
+                _buildTotalInvestimentoField(),
+                _buildDataPagamentoField(),
+                Row(
+                  children: <Widget>[
+                  Spacer(),
+                  _buildCancelarField(),
+                  Spacer(),
+                  _buildSalvarField(),
+                  Spacer(),
+                  _buildDeleteField(),
+                  Spacer(),
+                  ]
+                )
+              ],
+              )
+            ),
+          )
+        )  
       ),
     );
   }
 
-  Future<QuerySnapshot> getTipoPagamento() async {
-  await Firebase.initializeApp();
-  return await FirebaseFirestore.instance
+  String getVencimento(Timestamp stringTime){
+    DateTime date = stringTime.toDate();
+    return DateFormat('dd/MM/yyyy').format(date).toString();
+  }
+
+  Future<QuerySnapshot> getTipoPagamento() {
+    Firebase.initializeApp();
+    return FirebaseFirestore.instance
       .collection("tipoPagamento").get();
   }
 
   Future<QuerySnapshot> getTipoInvestimento() async {
-  await Firebase.initializeApp();
-  return await FirebaseFirestore.instance
+    Firebase.initializeApp();
+    return await FirebaseFirestore.instance
       .collection("tipoInvestimento").get();
   }
 
