@@ -51,5 +51,6 @@ Na edição de metas, contempla algumas ações novas como a exclusão da meta, 
 "O Flutter, um framework desenvolvido pelo Google na linguagem Dart, permite o desenvolvimento de aplicações nativas tanto para Android quanto para iOS a partir da composição de Widgets" --DevMedia: <a href="https://www.devmedia.com.br/o-que-e-flutter/40324">O que é Flutter</a>
 
 # Cursos/Tutoriais
+
+## Curso Completo de Flutter
 [![Curso Completo Flutter](http://img.youtube.com/vi/XeUiJJN0vsE/0.jpg)](http://www.youtube.com/watch?v=XeUiJJN0vsE "PlayList - Curso Completo Flutter")
-Curso Completo de Flutter
