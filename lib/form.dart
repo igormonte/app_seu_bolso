@@ -23,6 +23,10 @@ class FormScreenState extends State<FormScreen> {
   List<String> _payimentTypes = [];
   String _investimentValue;
   String _paymentDate;
+  String _remainingValue;
+  String _discountPercentual;
+  String _salary;
+  String _percentual;
   bool _update = false;
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -56,6 +60,20 @@ class FormScreenState extends State<FormScreen> {
     Firebase.initializeApp();
     FirebaseFirestore.instance.collection('metas').doc(_documentId).delete();
     Navigator.of(context).pushNamed('Home');
+  }
+
+  descontarMeta(){
+    print(this._discountPercentual);
+    if(this._discountPercentual != null && double.parse(_percentual) <= 100.00){
+      Map<String, dynamic> objeto = {
+        'totalRestante': double.parse(_remainingValue) - (double.parse(_salary) * (double.parse(_percentual) / 100.00) * (double.parse(this._discountPercentual)/100))
+      };
+      Firebase.initializeApp();
+      FirebaseFirestore.instance.collection('metas').doc(_documentId).update(objeto).catchError((onError){
+        print(onError);
+      });
+      Navigator.of(context).pushNamed('Home');
+    }
   }
   
   Widget _buildTituloField() {
@@ -177,6 +195,25 @@ class FormScreenState extends State<FormScreen> {
      );
   }
 
+  Widget _buildPercentualDescontoField() {
+    return TextFormField(
+      decoration: InputDecoration(
+        labelText: 'Percentual de Desconto'
+      ),
+      initialValue: this._discountPercentual,
+      validator: (String value){
+        if(value.isEmpty){
+          return 'Percentual de desconto é obrigatório';
+        }
+
+        return null;
+      },
+      onSaved: (String value){
+        this._discountPercentual = value;
+      },
+     );
+  }
+
   Widget _buildCancelarField(){
     return RaisedButton(
       child: Text(
@@ -231,6 +268,25 @@ class FormScreenState extends State<FormScreen> {
     );
   } 
 
+  Widget _buildDescontoField(context){
+    return Visibility(
+      child: RaisedButton(
+        child: Text(
+          'Desconto',
+        style: TextStyle(
+          color: Colors.blue,
+          fontSize: AppSize.fonts['md']
+          ),
+        ),
+        onPressed: () {
+          _formKey.currentState.save();
+          descontarMeta();
+        },
+      ),
+      visible: _update? true : false,
+    );
+  } 
+
   @override
   void initState() {
     super.initState();
@@ -251,6 +307,15 @@ class FormScreenState extends State<FormScreen> {
       })
     });
 
+    getSalary().then((value) => {
+      setState(() {
+        value.docs.asMap().forEach((key, value) {
+          this._salary = value.data()['valor'];
+          this._percentual = value.data()['percentual'];
+        });
+      })
+    });
+
   }
 
 
@@ -266,10 +331,11 @@ class FormScreenState extends State<FormScreen> {
       _payimentType = metas.data()['tipoPagamento'].id;
       _investimentValue= metas.data()['totalInvestir'].toString();
       _paymentDate = getVencimento(metas.data()['vencimento']);
+      _remainingValue = metas.data()['totalRestante'].toString();
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text("Form")),
+      appBar: AppBar(title: Text("Meta")),
       body: SingleChildScrollView(
         child: Container(
           margin: EdgeInsets.all(AppSize.edges['sm']),
@@ -294,7 +360,17 @@ class FormScreenState extends State<FormScreen> {
                   _buildDeleteField(),
                   Spacer(),
                   ]
-                )
+                ),
+                if (_update) const Divider(
+                  color: Colors.black,
+                  thickness: 2,
+                ),
+                if (_update) Text("Restantes: " + _remainingValue.toString(),
+                  style: TextStyle(fontSize: AppSize.fonts['md']),
+                ),
+                if (_update) _buildPercentualDescontoField(),
+                if (_update) _buildDescontoField(context),
+            
               ],
               )
             ),
@@ -319,6 +395,12 @@ class FormScreenState extends State<FormScreen> {
     Firebase.initializeApp();
     return await FirebaseFirestore.instance
       .collection("tipoInvestimento").get();
+  }
+
+  Future<QuerySnapshot> getSalary() async {
+    Firebase.initializeApp();
+    return await FirebaseFirestore.instance
+      .collection("salario").get();
   }
 
 

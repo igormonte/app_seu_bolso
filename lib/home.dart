@@ -24,6 +24,41 @@ class _HomeState extends State<Home> {
         appBar: AppBar(
           title: Text("Minhas Metas"),
         ),
+        drawer: new Drawer(
+          child: ListView(
+          // Important: Remove any padding from the ListView.
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              child: Text('Seu Bolso'),
+              decoration: BoxDecoration(
+                color: Colors.blue,
+                image: DecorationImage(
+                  image: AssetImage("lib/assets/seubolsodrawer.png"),
+                     fit: BoxFit.cover)
+                ),
+              ),
+              ListTile(
+              title: Text('Home'),
+                onTap: () {
+                  // Update the state of the app
+                  // ...
+                  // Then close the drawer
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+              title: Text('Salario'),
+                onTap: () {
+                  // Update the state of the app
+                  // ...
+                  // Then close the drawer
+                  Navigator.of(context).pushNamed('Salary', arguments: true);
+                },
+              ),
+            ],
+          ),
+        ),
         body: FutureBuilder(
           future: getData(),
           builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -36,12 +71,12 @@ class _HomeState extends State<Home> {
                       color: getColor(snapshot.data.docs[index].data()['totalRestante'], snapshot.data.docs[index].data()['totalInvestir']), 
                       child: Center(
                         child:Padding(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(19),
                           child: Row (
                             children: <Widget>[
                               Padding(
                                 padding: EdgeInsets.fromLTRB(0, 0, 16, 0),
-                                child: Icon(Icons.account_box,size: 40, color: Colors.white)
+                                child: Icon(Icons.email, size: 40, color: Colors.white)
                               ),
                               Column (
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,7 +110,9 @@ class _HomeState extends State<Home> {
             } else if (snapshot.connectionState == ConnectionState.none) {
               return Text("No data");
             }
-            return CircularProgressIndicator();
+            return Center(
+              child: CircularProgressIndicator()
+            );
           },
         ),
         floatingActionButton: FloatingActionButton(
