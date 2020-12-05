@@ -45,6 +45,7 @@ No cadastro de metas, é possível inserir as informações de sua meta.
 
 ## Edição de Metas
 ![Edição de Metas](https://github.com/igormonte/app_seu_bolso/blob/master/docs/ediarMeta.png)
+
 Na edição de metas, contempla algumas ações novas como a exclusão da meta, a atualização e o abatimento do valor.
 
 # O que é Flutter?
